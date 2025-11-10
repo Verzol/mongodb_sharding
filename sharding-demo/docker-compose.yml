@@ -1,0 +1,52 @@
+version: '3.8'
+
+networks:
+  mongo-sharding:
+    driver: bridge
+
+services:
+  config-server:
+    image: mongo:latest
+    container_name: config-server
+    command: ["--configsvr", "--replSet", "csReplSet", "--port", "27017", "--bind_ip_all"]
+    ports:
+      - "27019:27017"
+    volumes:
+      - ./data/config-server:/data/db
+    networks:
+      - mongo-sharding
+
+  shard1-server:
+    image: mongo:latest
+    container_name: shard1-server
+    command: ["--shardsvr", "--replSet", "shard1ReplSet", "--port", "27017", "--bind_ip_all"]
+    ports:
+      - "27020:27017"
+    volumes:
+      - ./data/shard1-server:/data/db
+    networks:
+      - mongo-sharding
+
+  shard2-server:
+    image: mongo:latest
+    container_name: shard2-server
+    command: ["--shardsvr", "--replSet", "shard2ReplSet", "--port", "27017", "--bind_ip_all"]
+    ports:
+      - "27021:27017"
+    volumes:
+      - ./data/shard2-server:/data/db
+    networks:
+      - mongo-sharding
+
+  mongos-router:
+    image: mongo:latest
+    container_name: mongos-router
+    command: ["mongos", "--configdb", "csReplSet/config-server:27017", "--port", "27017", "--bind_ip_all"]
+    ports:
+      - "27016:27017"
+    depends_on:
+      - config-server
+      - shard1-server
+      - shard2-server
+    networks:
+      - mongo-sharding
