@@ -1,0 +1,5 @@
+# Bỏ qua tất cả thư mục 'data'
+**/data
+
+# Bỏ qua file hệ thống của Mac (nếu có)
+**/.DS_Store
